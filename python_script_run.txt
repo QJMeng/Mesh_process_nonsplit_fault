@@ -1,0 +1,50 @@
+import sys 
+try:
+    #cubit.init([""])
+    cubit.init(["-noecho","-nojournal"])
+except:
+    pass
+# gets version string
+cubit_version = cubit.get_version()
+print("version: ",cubit_version)
+#                                                                                                     
+# GEOCUBIT
+#
+# adds path to geocubit (if not setup yet)
+sys.path.append('./')
+import geocubitlib
+sys.path.append(geocubitlib.__path__[0])
+
+print("path: ")
+print(sys.path)
+print("")
+
+from geocubitlib import save_fault_nodes_elements_EQdyna
+from geocubitlib import save_mesh_nodes_elements_EQdyna
+from geocubitlib import material_EQdyna
+
+os.system('mkdir -p MESH')
+#get fault 1 (left fault,three surfaces), output contains slave_node,
+save_fault_nodes_elements_EQdyna.fault_input(1,[15,17,18],[3],[4,5,6])
+#get fault 2 (mid fault,short)
+save_fault_nodes_elements_EQdyna.fault_input(2,[22],[6],[2])
+#get fault 3 (right fault,two surfaces)
+save_fault_nodes_elements_EQdyna.fault_input(3,[13,32],[4,2],[1])
+
+#get mesh and node information
+save_mesh_nodes_elements_EQdyna.mesh_input()
+
+
+#get material of volumes, input file 'velocity_file' should be prepared beforehand
+#check if old material files exist
+input_velocity='velocity_file'
+reference_velocity='MESH/'+input_velocity+'_ref'
+if os.path.exists(reference_velocity):
+   os.remove(reference_velocity)
+material_file='MESH/material_file'
+if os.path.exists(material_file):
+   os.remove(material_file)
+
+#assign material 1 to volumes in vol_list, material 1 structure is shown in input_velocity 
+vol_list=list(cubit.parse_cubit_list('vol','all'))
+material_EQdyna.assign_material(1,input_velocity,vol_list)
